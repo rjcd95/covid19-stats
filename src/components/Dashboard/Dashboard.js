@@ -37,16 +37,21 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function Dashboard() {
-  const [flterSearch, setFilterSearch] = useState('');
+  const [search, setFilterSearch] = useState('');
+  const [syncData, setSyncData] = useState(false);
 
   const classes = useStyles();
 
   return (
     <div className={classes.root}>
       <main className={classes.content}>
-        <MenuAppBar setFilterSearch={ setFilterSearch } />
+        <MenuAppBar 
+              setFilterSearch={ setFilterSearch }
+              setSyncData={ setSyncData }/>
         <Container maxWidth="lg" className={classes.container}>
-          <Statistics filterSearch={ flterSearch } />
+          <Statistics search={ search } 
+              syncData={ syncData }
+              setSyncData={ setSyncData }/>
         </Container>
       </main>
     </div>

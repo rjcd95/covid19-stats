@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from "react-redux";
 import { fade, makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
@@ -79,7 +79,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function MenuAppBar({ setFilterSearch }) {
+export default function MenuAppBar({ setFilterSearch, setSyncData }) {
   let timeout;
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -106,11 +106,16 @@ export default function MenuAppBar({ setFilterSearch }) {
     dispatch(logout());
   }
 
-  const handleChange = (e) => {    
-    const search = e.target.value;
-    if (timeout) clearTimeout(timeout);    
+  const handleSyncStats = () => {
+    setSyncData(true);
+  }
+
+  const handleSearchChange = (e) => {    
+    const searchText = e.target.value;
+    if(searchText.length === 0) return;
+    if (timeout) clearTimeout(timeout);
     timeout = setTimeout(() => {
-      setFilterSearch(search);
+      setFilterSearch(searchText);
     }, 300);    
   }
 
@@ -140,7 +145,7 @@ export default function MenuAppBar({ setFilterSearch }) {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      <MenuItem>
+      <MenuItem onClick={handleSyncStats}>
         <IconButton color="inherit">
           <SyncIcon />
         </IconButton>
@@ -169,18 +174,18 @@ export default function MenuAppBar({ setFilterSearch }) {
               <SearchIcon />
             </div>
             <InputBase
-              placeholder="Search…"
+              placeholder="Search..."
               classes={{
                 root: classes.inputRoot,
                 input: classes.inputInput,
               }}
               inputProps={{ 'aria-label': 'search' }}
-              onChange={handleChange}
+              onChange={handleSearchChange}
             />
           </div>
           <div className={classes.grow} />
           <div className={classes.sectionDesktop}>
-            <IconButton color="inherit">
+            <IconButton color="inherit" onClick={handleSyncStats}>
               <SyncIcon />
             </IconButton>
             <IconButton color="inherit" onClick={handleLogout}>
