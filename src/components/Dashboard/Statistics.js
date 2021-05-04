@@ -1,16 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import Typography from '@material-ui/core/Typography';
-import statService from "../../services/stat.service";
 import { DataGrid } from '@material-ui/data-grid';
 import IconButton from '@material-ui/core/IconButton';
 import CreateIcon from '@material-ui/icons/Create';
+import statService from "../../services/stat.service";
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import Button from '@material-ui/core/Button';
+import Slide from '@material-ui/core/Slide';
+import { makeStyles } from '@material-ui/core/styles';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import StatItem from "./StatItem";
+
+
+const useStyles = makeStyles((theme) => ({
+  centered: {
+      textAlign: 'center'
+  }
+}));
+
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 const numberFormat = new Intl.NumberFormat('en-US');
 const newCases = new Intl.NumberFormat('en-US', {
   signDisplay: "exceptZero"
 });
-
-const columns = [
+const defaultColumns = [
+  
   { field: 'id', headerName: 'ID', hide: true },
   { field: 'country', headerName: 'Country', flex: 1 },
   { 
@@ -72,32 +93,47 @@ const columns = [
         year: 'numeric',
       });
     }
-  },
-  {
-    field: "",
-    headerName: "Action",
-    sortable: false,
-    renderCell: (params) => {
-      const onClick = () => {
-        console.log(params.id);
-      };
-      return <IconButton color="inherit" onClick={onClick}><CreateIcon /></IconButton>;
-    }
   }
-];
+]
 
 export default function Statistics({ search, syncData, setSyncData }) {
+  const classes = useStyles();
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState('country');
   const [order, setOrder] = useState(1);
   const [totalRows, setTotalRows] = useState(0);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
-  let reloadData = true;
+  const [countryId, setCountryId] = useState('');
+  const [open, setOpen] = React.useState(false);
+  const [reloadData, setReloadData] = React.useState(true);
+  const [dialogText, setDialogText] = React.useState({});
+
+  const columns = [...defaultColumns, 
+    {
+      field: "",
+      headerName: "Action",
+      sortable: false,
+      renderCell: (params) => {
+        const onClick = () => {
+          setCountryId(params.id);
+        };
+        return <IconButton color="inherit" onClick={onClick}><CreateIcon /></IconButton>;
+      }
+    }
+  ];
+
+  const initDialogTxt = () => {
+    setDialogText({
+      msg: "Are you sure to sync the data? You will lose all the information registered manually.",
+      txtOk: 'Agree',
+      txtCancel: 'Disagree'
+    });
+  }
 
   const handlePageChange = (params) => {
     setPage(params.page + 1);
-    reloadData = true;
+    setReloadData(true);
   };
 
   const setDefaultFilter = () => {
@@ -112,57 +148,113 @@ export default function Statistics({ search, syncData, setSyncData }) {
     const sort = (sortModel) ? ((sortModel.sort === "asc") ? 1 : -1) : 1;
 
     setSort(field);
-    setOrder(sort);  
-    reloadData = true;
+    setOrder(sort);
+    setReloadData(true);
+  }
+
+  const handleOkBtnDialog = (e) => {
+    e.preventDefault();
+    syncStatsData();    
   }
 
   const syncStatsData = async() => {
+    setOpen(false);
     setLoading(true);
     statService.syncStats()
       .then(resp => {
-        alert(resp.data.msg);
-        setSyncData(false);
-        setDefaultFilter();
+        if(resp.status === 201){
+          setSyncData(false);
+          setLoading(false);
+          setDefaultFilter();
+          setDialogText({
+            msg: "Data synced successfully!",
+            txtOk: '',
+            txtCancel: 'Ok'
+          });
+          setOpen(true);
+        }
       })
   }
 
   const fetchStats = async () => {
+    setLoading(true);
     statService.getStats({ page, sort, order, search  })
       .then(resp => {
         const data = resp.data;
         setTotalRows(data.totalDocs);
         setLoading(false);
         setRows(data.docs);
+        setReloadData(false);
       })
   }
 
+  const handleClose = () => {
+    if(dialogText.txtOk === "") {
+      setReloadData(true);
+    }
+    setOpen(false);
+    setSyncData(false);
+  };
+
   useEffect(() => {
-    setLoading(true);
     if(reloadData) {
       fetchStats();
     }
     if(syncData) {
-      syncStatsData();
+      initDialogTxt();
+      setOpen(true);
     }
-  }, [ page, sort, order, search, syncData ])
+  }, [ page, sort, order, search, syncData, reloadData ])
 
   return (    
     <div style={{ height: 400, width: '100%' }}>
       <Typography component="h2" variant="h6" color="primary" gutterBottom>
         Statistics
       </Typography>
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        pagination
-        pageSize={5}
-        rowCount={totalRows}
-        paginationMode="server"
-        onPageChange={handlePageChange}
-        onSortModelChange={handleSortModelChange}
-        disableColumnFilter
-        loading={loading}
-      />
+      {!loading && (
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          pagination
+          pageSize={5}
+          rowCount={totalRows}
+          paginationMode="server"
+          onPageChange={handlePageChange}
+          onSortModelChange={handleSortModelChange}
+          disableColumnFilter
+          loading={loading}
+        /> 
+      )}
+      {loading && (
+        <div className={classes.centered}>
+          <CircularProgress disableShrink/>
+        </div>
+      )}
+      <Dialog 
+        open={open}
+        onClose={handleClose} 
+        TransitionComponent={Transition}
+        keepMounted
+        aria-labelledby="alert-dialog-slide-title"
+        aria-describedby="alert-dialog-slide-description">
+        <DialogTitle id="alert-dialog-title">{"Sync all stats?"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {dialogText.msg}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            {dialogText.txtCancel}
+          </Button>
+          {dialogText.txtOk !== "" &&(
+            <Button onClick={handleOkBtnDialog} color="primary" autoFocus>
+              {dialogText.txtOk}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+      <StatItem countryId={ countryId } setCountryId={ setCountryId } />
     </div>
   );
 }
