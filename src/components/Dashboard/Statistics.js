@@ -57,31 +57,63 @@ const columns = [
     headerName: 'Total Tests',
     flex: 1,
     valueFormatter: ({ value }) => numberFormat.format(Number(value)),
+  },
+  { 
+    field: 'date',
+    headerName: 'Date',
+    flex: 1,
+    valueFormatter: ({ value }) => {
+      return new Date(value).toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    },
   }
 ];
 
-export default function Statistics({ filterSearch }) {
+export default function Statistics({ search, syncData, setSyncData }) {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState('country');
   const [order, setOrder] = useState(1);
   const [totalRows, setTotalRows] = useState(0);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
+  let reloadData = true;
 
   const handlePageChange = (params) => {
     setPage(params.page + 1);
+    reloadData = true;
   };
+
+  const setDefaultFilter = () => {
+    setPage(1);            
+    setSort('country');
+    setOrder(1);
+  }
 
   const handleSortModelChange = (params) => {
     const sortModel = params.sortModel[0];
     const field = (sortModel) ? sortModel.field : 'country';
     const sort = (sortModel) ? ((sortModel.sort === "asc") ? 1 : -1) : 1;
+
     setSort(field);
-    setOrder(sort);
+    setOrder(sort);  
+    reloadData = true;
+  }
+
+  const syncStatsData = async() => {
+    setLoading(true);
+    statService.syncStats()
+      .then(resp => {
+        alert(resp.data.msg);
+        setSyncData(false);
+        setDefaultFilter();
+      })
   }
 
   const fetchStats = async () => {
-    statService.getStats({ page, sort, order, search: filterSearch  })
+    statService.getStats({ page, sort, order, search  })
       .then(resp => {
         const data = resp.data;
         setTotalRows(data.totalDocs);
@@ -91,9 +123,14 @@ export default function Statistics({ filterSearch }) {
   }
 
   useEffect(() => {
-    fetchStats();
-    setLoading(true); 
-  }, [ page, sort, order, filterSearch ])
+    setLoading(true);
+    if(reloadData || search?.length > 0) {
+      fetchStats();
+    }
+    if(syncData) {
+      syncStatsData();
+    }
+  }, [ page, sort, order, search, syncData ])
 
   return (    
     <div style={{ height: 400, width: '100%' }}>
