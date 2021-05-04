@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Typography from '@material-ui/core/Typography';
 import statService from "../../services/stat.service";
 import { DataGrid } from '@material-ui/data-grid';
+import IconButton from '@material-ui/core/IconButton';
+import CreateIcon from '@material-ui/icons/Create';
 
 const numberFormat = new Intl.NumberFormat('en-US');
 const newCases = new Intl.NumberFormat('en-US', {
@@ -9,6 +11,7 @@ const newCases = new Intl.NumberFormat('en-US', {
 });
 
 const columns = [
+  { field: 'id', headerName: 'ID', hide: true },
   { field: 'country', headerName: 'Country', flex: 1 },
   { 
     field: 'newCases',
@@ -68,7 +71,18 @@ const columns = [
         month: 'short',
         year: 'numeric',
       });
-    },
+    }
+  },
+  {
+    field: "",
+    headerName: "Action",
+    sortable: false,
+    renderCell: (params) => {
+      const onClick = () => {
+        console.log(params.id);
+      };
+      return <IconButton color="inherit" onClick={onClick}><CreateIcon /></IconButton>;
+    }
   }
 ];
 
