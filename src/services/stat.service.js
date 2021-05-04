@@ -16,7 +16,7 @@ const getStatItem = (id) => {
 };
 
 const updateStatItem = (data) => {
-    return axios.post(API_URL + "stats/" + data.id, data);
+    return axios.post(API_URL + "stats/" + data.id, data, { headers: authHeader() });
 };
 
 const statService = {

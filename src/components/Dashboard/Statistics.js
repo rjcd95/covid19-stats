@@ -105,6 +105,7 @@ export default function Statistics({ search, syncData, setSyncData }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [countryId, setCountryId] = useState('');
+  const [openForm, setOpenForm] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const [reloadData, setReloadData] = React.useState(true);
   const [dialogText, setDialogText] = React.useState({});
@@ -116,6 +117,7 @@ export default function Statistics({ search, syncData, setSyncData }) {
       sortable: false,
       renderCell: (params) => {
         const onClick = () => {
+          setOpenForm(true);
           setCountryId(params.id);
         };
         return <IconButton color="inherit" onClick={onClick}><CreateIcon /></IconButton>;
@@ -125,9 +127,10 @@ export default function Statistics({ search, syncData, setSyncData }) {
 
   const initDialogTxt = () => {
     setDialogText({
+      title: "Sync all stats?",
       msg: "Are you sure to sync the data? You will lose all the information registered manually.",
-      txtOk: 'Agree',
-      txtCancel: 'Disagree'
+      txtOk: 'Ok',
+      txtCancel: 'Cancel'
     });
   }
 
@@ -167,6 +170,7 @@ export default function Statistics({ search, syncData, setSyncData }) {
           setLoading(false);
           setDefaultFilter();
           setDialogText({
+            title: "Sync stats",
             msg: "Data synced successfully!",
             txtOk: '',
             txtCancel: 'Ok'
@@ -197,7 +201,7 @@ export default function Statistics({ search, syncData, setSyncData }) {
   };
 
   useEffect(() => {
-    if(reloadData) {
+    if(reloadData || search) {
       fetchStats();
     }
     if(syncData) {
@@ -237,7 +241,7 @@ export default function Statistics({ search, syncData, setSyncData }) {
         keepMounted
         aria-labelledby="alert-dialog-slide-title"
         aria-describedby="alert-dialog-slide-description">
-        <DialogTitle id="alert-dialog-title">{"Sync all stats?"}</DialogTitle>
+        <DialogTitle id="alert-dialog-title">{dialogText.title}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             {dialogText.msg}
@@ -254,7 +258,15 @@ export default function Statistics({ search, syncData, setSyncData }) {
           )}
         </DialogActions>
       </Dialog>
-      <StatItem countryId={ countryId } setCountryId={ setCountryId } />
+      <StatItem 
+        countryId={ countryId }
+        setCountryId={ setCountryId }
+        openForm={ openForm }
+        setOpenForm={ setOpenForm }
+        setOpenConfirmDialog={ setOpen }
+        setReloadData= { setReloadData }
+        setDialogText= { setDialogText }
+      />
     </div>
   );
 }
