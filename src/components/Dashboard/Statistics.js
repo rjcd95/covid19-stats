@@ -185,16 +185,20 @@ export default function Statistics({ search, syncData, setSyncData }) {
     statService.getStats({ page, sort, order, search  })
       .then(resp => {
         const data = resp.data;
-        setTotalRows(data.totalDocs);
-        setLoading(false);
-        setRows(data.docs);
-        setReloadData(false);
+        if(data.docs.length == 0) {
+          syncStatsData();
+        } else {
+          setTotalRows(data.totalDocs);
+          setLoading(false);
+          setRows(data.docs);
+          setReloadData(false);
+        }
       })
   }
 
   const handleClose = () => {
     if(dialogText.txtOk === "") {
-      setReloadData(true);
+      fetchStats();
     }
     setOpen(false);
     setSyncData(false);
