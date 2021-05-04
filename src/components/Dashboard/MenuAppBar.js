@@ -112,7 +112,6 @@ export default function MenuAppBar({ setFilterSearch, setSyncData }) {
 
   const handleSearchChange = (e) => {    
     const searchText = e.target.value;
-    if(searchText.length === 0) return;
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(() => {
       setFilterSearch(searchText);

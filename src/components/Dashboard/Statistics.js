@@ -124,7 +124,7 @@ export default function Statistics({ search, syncData, setSyncData }) {
 
   useEffect(() => {
     setLoading(true);
-    if(reloadData || search?.length > 0) {
+    if(reloadData) {
       fetchStats();
     }
     if(syncData) {
