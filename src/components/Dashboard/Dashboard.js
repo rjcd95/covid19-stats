@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import MenuAppBar from './MenuAppBar';
-import Statistics from './Statistics';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -46,7 +45,6 @@ export default function Dashboard() {
       <main className={classes.content}>
         <MenuAppBar setFilterSearch={ setFilterSearch } />
         <Container maxWidth="lg" className={classes.container}>
-          <Statistics filterSearch={ flterSearch } />
         </Container>
       </main>
     </div>
