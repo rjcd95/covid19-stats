@@ -267,6 +267,10 @@ export default function StatItem({ countryId, setCountryId, openForm, setOpenFor
                                         <Typography variant="h6" className={classes.title}>Tests</Typography>
                                         <List>
                                             <ListItem>
+                                                <ListItemText primary="New Tests"/>
+                                                <ListItemSecondaryAction>{data.newTests}</ListItemSecondaryAction>
+                                            </ListItem>
+                                            <ListItem>
                                                 <ListItemText primary="Total Tests"/>
                                                 <ListItemSecondaryAction>{data.totalTests}</ListItemSecondaryAction>
                                             </ListItem>
